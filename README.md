@@ -1,28 +1,58 @@
-# Automated EDA & Data Cleaning Agent
+<div align="center">
 
-A Python script that takes a folder full of messy CSVs and hands you back clean ones, with a printout showing exactly what changed.
+# 🧹 Automated EDA & Data Cleaning Agent
+
+**A Python script that takes a folder full of messy CSVs and hands you back clean ones — with a printout showing exactly what changed.**
+
+[![Python](https://img.shields.io/badge/Python-3.x-3776AB?style=for-the-badge&logo=python&logoColor=white)](https://www.python.org/)
+[![Pandas](https://img.shields.io/badge/pandas-Data%20Cleaning-150458?style=for-the-badge&logo=pandas&logoColor=white)](https://pandas.pydata.org/)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](LICENSE)
+[![PRs Welcome](https://img.shields.io/badge/PRs-welcome-brightgreen.svg?style=for-the-badge)](CONTRIBUTING.md)
+
+<img src="https://www.python.org/static/community_logos/python-logo-generic.svg" width="300" alt="Python logo">
+
+</div>
 
 ---
 
-## Why this exists
+## 📋 Table of Contents
+
+- [Why this exists](#-why-this-exists)
+- [Stack](#-stack)
+- [What it does](#-what-it-does)
+- [Project layout](#-project-layout)
+- [Running it](#-running-it)
+- [What the output looks like](#-what-the-output-looks-like)
+- [How it works, roughly](#-how-it-works-roughly)
+- [Ideas for later](#-ideas-for-later)
+- [License](#-license)
+- [Contributing](#-contributing)
+
+---
+
+## 🤔 Why this exists
 
 Cleaning CSVs by hand gets old fast. You open a file, count the nulls, decide how to fill them, drop the duplicates, save it, and repeat for every dataset in the folder. Do that ten times and you start making mistakes or skipping steps.
 
 This script does the repetitive part: it finds every CSV in the working directory, cleans each one based on what type of data is in each column, and prints a before/after comparison so you can actually see what it did rather than trusting it blindly.
 
+> 💡 **Tip:** Record a quick terminal run with [Terminalizer](https://terminalizer.com/) or [asciinema](https://asciinema.org/) and drop the GIF here — it's the fastest way to show what this does at a glance.
+
 ---
 
-## Stack
+## 🛠️ Stack
 
-- Python 3.x
-- `pandas` for the actual data work
-- `os` and `glob` from the standard library for file handling
+| | |
+|---|---|
+| **Language** | Python 3.x |
+| **Core library** | `pandas` — does the actual data work |
+| **Standard library** | `os`, `glob` — file discovery and path handling |
 
 That's it — no extra dependencies to install beyond pandas.
 
 ---
 
-## What it does
+## ⚙️ What it does
 
 **Finds your files.** Scans the current folder for `.csv` files. No need to list filenames anywhere in the script.
 
@@ -43,7 +73,7 @@ That's it — no extra dependencies to install beyond pandas.
 
 ---
 
-## Project layout
+## 📁 Project layout
 
 ```
 .
@@ -64,7 +94,7 @@ After a run, you'll see the cleaned versions sitting next to the originals:
 
 ---
 
-## Running it
+## 🚀 Running it
 
 Clone the repo:
 
@@ -89,7 +119,7 @@ That's it. Cleaned files show up as `*_cleaned.csv`, and you'll get a report for
 
 ---
 
-## What the output looks like
+## 📊 What the output looks like
 
 ```
 ==================================================
@@ -111,7 +141,7 @@ ALL FILES VERIFIED AND PROCESSED!
 
 ---
 
-## How it works, roughly
+## 🧠 How it works, roughly
 
 `glob` finds every `.csv` in the folder (skipping anything already cleaned). Each file gets loaded, checked for basic sanity — is it actually empty, does it have duplicate column names — then cleaned column by column depending on its data type. Duplicate rows get dropped. Then the row counts and missing-value counts from before and after get compared and printed, and the result is written out with a `_cleaned` suffix.
 
@@ -119,7 +149,7 @@ Nothing fancy — it's basically the checklist you'd run through manually, just 
 
 ---
 
-## Ideas for later
+## 🔮 Ideas for later
 
 A few things I'd add if I kept working on this:
 
@@ -133,12 +163,12 @@ It works fine as-is. These are just the next things I'd reach for.
 
 ---
 
-## License
+## 📄 License
 
 MIT. Use it however you want.
 
 ---
 
-## Contributing
+## 🤝 Contributing
 
 If you find a bug or have an idea, open an issue or send a PR. I can't promise a fast turnaround but I do read them.
