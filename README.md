@@ -36,8 +36,6 @@ Cleaning CSVs by hand gets old fast. You open a file, count the nulls, decide ho
 
 This script does the repetitive part: it finds every CSV in the working directory, cleans each one based on what type of data is in each column, and prints a before/after comparison so you can actually see what it did rather than trusting it blindly.
 
-> 💡 **Tip:** Record a quick terminal run with [Terminalizer](https://terminalizer.com/) or [asciinema](https://asciinema.org/) and drop the GIF here — it's the fastest way to show what this does at a glance.
-
 ---
 
 ## 🛠️ Stack
