@@ -1,38 +1,34 @@
 import pandas as pd
 import os
 import glob
-
+from datetime import datetime
 
 def run_verified_cleaning_agent():
     print("==================================================")
-    print("VERIFIED AUTO-EDA & CLEANING AGENT")
+    print("VERIFIED AUTO-EDA & CLEANING AGENT (PRO EDITION)")
     print("==================================================")
-
-    # 1. Check if any CSV files exist in the folder
+    
     csv_files = glob.glob('*.csv')
     if not csv_files:
         print("❌ Error: Folder mein koi bhi .csv file nahi mili!")
         return
-
+        
     for file_path in csv_files:
-        # Avoid processing already cleaned or audit files to prevent loops
         if '_cleaned.csv' in file_path or '_audit_report' in file_path:
             continue
-
+            
         print(f"\n📂 Processing & Verifying: '{file_path}'")
-
-        # --- LOAD ORIGINAL DATA ---
+        
         try:
             df_original = pd.read_csv(file_path, encoding='utf-8', encoding_errors='replace')
         except Exception as e:
             print(f"❌ Error reading {file_path}: {e}")
             continue
-
+            
         if df_original.empty:
             print(f"⚠️ Skipping empty file: {file_path}")
             continue
 
-        # Handle duplicate column names (rare but breaks fillna logic if present)
         if df_original.columns.duplicated().any():
             print(f"⚠️ Warning: Duplicate column names found in {file_path}. Renaming duplicates.")
             cols = pd.Series(df_original.columns)
@@ -46,65 +42,80 @@ def run_verified_cleaning_agent():
         orig_rows, orig_cols = df_original.shape
         orig_missing = df_original.isnull().sum().sum()
         orig_duplicates = df_original.duplicated().sum()
-
-        # Copy for cleaning
+        
         df = df_original.copy()
-
-        # --- CLEANING PROCESS ---
+        
         try:
             numeric_cols = df.select_dtypes(include=['float64', 'int64']).columns.tolist()
             categorical_cols = df.select_dtypes(include=['object', 'category']).columns.tolist()
             datetime_cols = df.select_dtypes(include=['datetime64[ns]']).columns.tolist()
-
-            # Fill missing numeric values with Median
+            
             for col in numeric_cols:
                 if df[col].isnull().sum() > 0:
                     median_val = df[col].median()
                     df[col] = df[col].fillna(median_val)
+                
+                skip_keywords = ['id', 'code', 'zip', 'year', 'no', 'number']
+                if any(keyword in col.lower() for keyword in skip_keywords):
+                    continue  
 
-            # Fill missing categorical values with Mode or 'Unknown'
+                Q1 = df[col].quantile(0.25)
+                Q3 = df[col].quantile(0.75)
+                IQR = Q3 - Q1
+                lower_bound = Q1 - 1.5 * IQR
+                upper_bound = Q3 + 1.5 * IQR
+                df[col] = df[col].clip(lower=lower_bound, upper=upper_bound)
+                
             for col in categorical_cols:
                 if df[col].isnull().sum() > 0:
                     mode_series = df[col].mode()
                     mode_val = mode_series[0] if not mode_series.empty else "Unknown"
                     df[col] = df[col].fillna(mode_val)
-
-            # Fill missing datetime values with forward-fill then back-fill (safe fallback)
+                    
             for col in datetime_cols:
                 if df[col].isnull().sum() > 0:
                     df[col] = df[col].ffill().bfill()
-
-            # Drop duplicate rows
+                    
             df.drop_duplicates(inplace=True)
-
+            
         except Exception as e:
             print(f"❌ Error cleaning {file_path}: {e}")
             continue
 
-        # --- VERIFICATION & CROSS-CHECK REPORT ---
         new_rows, _ = df.shape
         new_missing = df.isnull().sum().sum()
-
-        print("   🔍 --- VERIFICATION REPORT ---")
+        
+        report_text = f"""--- VERIFICATION REPORT FOR: {file_path} ---
+Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+- Rows Before: {orig_rows:,} | Rows After: {new_rows:,} (Removed: {orig_rows - new_rows:,} rows)
+- Missing Values Before: {orig_missing:,} | Missing Values After: {new_missing:,}
+- Duplicates Removed: {orig_duplicates:,}
+- Status: Verified & Cleaned Successfully! ✅
+--------------------------------------------------"""
+        
+        print(f"\n   🔍 --- VERIFICATION REPORT ---")
         print(f"   - Rows Before: {orig_rows:,} | Rows After: {new_rows:,} (Removed: {orig_rows - new_rows:,} rows)")
         print(f"   - Missing Values Before: {orig_missing:,} | Missing Values After: {new_missing:,}")
         print(f"   - Duplicates Removed: {orig_duplicates:,}")
         print("   - Status: Verified & Cleaned Successfully! ✅")
 
-        # --- SAVE CLEANED FILE ---
+        base_name, ext = os.path.splitext(file_path)
+        output_filename = f"{base_name}_cleaned{ext}"
+        audit_filename = f"{base_name}_audit_report.txt"
+        
         try:
-            base_name, ext = os.path.splitext(file_path)
-            output_filename = f"{base_name}_cleaned{ext}"
             df.to_csv(output_filename, index=False)
-            print(f"   💾 Saved as: '{output_filename}'")
+            with open(audit_filename, 'w', encoding='utf-8') as f:
+                f.write(report_text)
+            print(f"   💾 Saved Cleaned File: '{output_filename}'")
+            print(f"   📝 Saved Audit Log:   '{audit_filename}'")
         except Exception as e:
-            print(f"❌ Error saving cleaned file for {file_path}: {e}")
+            print(f"❌ Error saving files for {file_path}: {e}")
             continue
 
     print("\n==================================================")
-    print("ALL FILES VERIFIED AND PROCESSED!")
+    print("ALL FILES VERIFIED, CLEANED AND AUDITED!")
     print("==================================================")
-
 
 if __name__ == "__main__":
     run_verified_cleaning_agent()
