@@ -52,24 +52,31 @@ No extra dependencies beyond pandas.
 
 ## ⚙️ What it does
 
-**Finds your files.** Scans the current folder for `.csv` files — no need to list filenames anywhere in the script.
+**1. Finds your files on its own.**
+You don't type any filenames anywhere. Just put your CSVs in the same folder as the script and run it — it looks around the folder itself and picks up every `.csv` file it finds.
 
-**Handles duplicate column names.** If a CSV somehow has two columns called the same thing, the second one gets renamed (`col`, `col_1`, `col_2`...) instead of quietly breaking downstream.
+**2. Fixes duplicate column names.**
+Sometimes a CSV has two columns with the exact same name — this happens more often than you'd think, especially with exported reports. If the script finds this, it doesn't crash or silently mix them up. It just renames the second one to `col_1`, the third to `col_2`, and so on, so every column stays separate and usable.
 
-**Cleans by column type:**
-- Numeric columns: missing values filled with the median (mean gets dragged around by outliers, median doesn't).
-- Text/categorical columns: missing values filled with the most common value, or `"Unknown"` if there isn't one.
-- Date columns: gaps filled by carrying the nearest known value forward, then backward for anything left at the start.
+**3. Fills in missing values, but differently depending on the column type:**
+- **Number columns** (price, age, quantity, etc.) → missing spots get filled with the **median** (the middle value). Not the average — because one huge or tiny number can drag the average way off, but the median stays steady.
+- **Text columns** (city, category, name, etc.) → missing spots get filled with whatever value shows up **most often** in that column. If nothing shows up at all, it just writes `"Unknown"` instead of leaving it blank.
+- **Date columns** → missing dates get filled using the nearest date around them — first it copies from the row above, and if there's nothing above (like at the very top of the file), it copies from the row below instead.
 
-**Clips outliers on numeric columns**, using the standard IQR method (anything outside Q1 − 1.5×IQR to Q3 + 1.5×IQR gets pulled in to the boundary). Columns that look like IDs, codes, ZIPs, years, or other reference numbers are skipped, since "outlier" doesn't really mean anything for a ZIP code.
+**4. Tames extreme/weird numbers (outliers).**
+Say most values in a "salary" column are between 20,000–80,000, but one row says 5,00,00,000 — that's clearly a mistake or a rare extreme case, and it can throw off any analysis. The script catches these using a standard statistics method called **IQR** (it looks at where most of your data sits, then pulls in anything way outside that range instead of deleting it). It's smart about *when* to do this too — columns like ID, ZIP code, or Year are left alone, because a "large" ID number isn't actually an outlier, it's just a number.
 
-**Drops duplicate rows** — the plain, fully-duplicated kind.
+**5. Removes duplicate rows.**
+If the exact same row appears more than once in your file, only one copy is kept and the rest are removed.
 
-**Writes a report for every file**, not just a printout. Rows before/after, missing values before/after, duplicates removed, timestamp — saved as its own `.txt` file so you have a record even after the terminal's scrolled away.
+**6. Gives you a written proof of what changed — not just a message on screen.**
+For every file, it creates a separate `.txt` report showing rows before and after, how many missing values were filled, how many duplicates were removed, and when the cleaning happened. So even after you close the terminal, you still have a record of exactly what was done to your data.
 
-**Doesn't crash on one bad file.** Empty, corrupted, or unreadable CSVs get logged and skipped, and the script moves on to the next one instead of dying halfway through the folder.
+**7. One bad file won't stop the whole run.**
+If a CSV is empty, broken, or can't be read for any reason, the script simply notes the error and moves on to the next file — instead of crashing and leaving the rest of your files untouched.
 
-**Won't clean its own output.** Anything already ending in `_cleaned.csv` or `_audit_report` gets skipped, so re-running the script doesn't reprocess what it already cleaned.
+**8. It won't clean its own output again.**
+Files that already end in `_cleaned.csv` or `_audit_report` are skipped automatically. So if you run the script twice by mistake, it won't try to "clean" the already-cleaned files.
 
 ---
 
